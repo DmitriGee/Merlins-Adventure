@@ -1,6 +1,4 @@
 import processing.core.PApplet;
-import processing.core.PImage;
-
 import java.util.ArrayList;
 
 public class Main extends PApplet {
@@ -13,6 +11,23 @@ public class Main extends PApplet {
     Player player = null;
     ArrayList<Enemy> activeEnemies = new ArrayList<>();
 
+    final int UI_MAIN = 0;
+    final int UI_FIGHT = 1;
+    final int UI_ACT = 2;
+    final int UI_ITEM = 3;
+    final int UI_RUN = 4;
+    final int UI_FIGHT_WHO = 5;
+
+    int UIMenu = UI_MAIN;
+    Attack UISelectedAttack = null;
+    Button BFight = new Button("Fight", windowWidth-400, windowHeight-100, 190, 30, 0, 205);
+    Button BAct = new Button("Act", windowWidth-200, windowHeight-100, 190, 30, 0, 205);
+    Button BItem = new Button("Item", windowWidth-400, windowHeight-50, 190, 30, 0, 205);
+    Button BRun = new Button("Run", windowWidth-200, windowHeight-50, 190, 30, 0, 205);
+    Button BBack = new Button("Back", windowWidth-400, windowHeight-100, 190, 30, 0, 205);
+    ArrayList<Button> LBAttacks = new ArrayList<>();
+    ArrayList<Button> LBEnemies = new ArrayList<>();
+
 
     public void settings() {
         size(windowWidth,windowHeight);
@@ -20,9 +35,11 @@ public class Main extends PApplet {
     public void setup() {
         frameRate(60);
         player = new Player(17,6,40,10,0);
+        player.attacks.add(new Attack("Cast Lightning", "Cast a bolt of lightning.", 2, 95, 5, 15));
+        player.attacks.add(new Attack("Cast Fireball", "Cast a flaming fireball.", 5, 15, 10, 1));
 
-        Enemy trainingDummy = new ScriptedMonsters.TrainingDummy();
-        activeEnemies.add(trainingDummy);
+        Enemy jeff = new ScriptedMonsters.Jeff();
+        activeEnemies.add(jeff);
     }
     public void draw() {
         background(255);
@@ -40,9 +57,9 @@ public class Main extends PApplet {
                 if (i == 0) { // Middle Position
                     rect(windowWidth-250,250,50,100);
                 } else if (i == 1) { // Top Position
-                    rect(windowWidth-250-35,250-115,50-10,100-10);
+                    rect(windowWidth-250-35,250-115,50-10,100-20);
                 } else if (i == 2) { // Bottom Position
-                    rect(windowWidth-250+45,250+125,50+10,100+10);
+                    rect(windowWidth-250+45,250+125,50+10,100+20);
                 }
             }
         }
@@ -79,7 +96,112 @@ public class Main extends PApplet {
         textSize(12);
         text(player.powerPoints+"/"+player.maxPowerPoints, 200+20+40,windowHeight-120+40);
 
+        switch (UIMenu) {
+            case UI_MAIN: {
+                BFight.background = 205;
+                BAct.background = 205;
+                BItem.background = 205;
+                BRun.background = 205;
+                if (BFight.isHover(mouseX, mouseY)) {
+                    BFight.background = 255;
+                }
+                if (BAct.isHover(mouseX, mouseY)) {
+                    BAct.background = 255;
+                }
+                if (BItem.isHover(mouseX, mouseY)) {
+                    BItem.background = 255;
+                }
+                if (BRun.isHover(mouseX, mouseY)) {
+                    BRun.background = 255;
+                }
+                textSize(16);
+                BFight.draw(this);
+                BAct.draw(this);
+                BItem.draw(this);
+                BRun.draw(this);
+                if (BFight.isPressed(mouseX,mouseY,mousePressed)) {
+                    UIMenu = UI_FIGHT;
+                }
+                else if (BAct.isPressed(mouseX,mouseY,mousePressed)) {
+                    UIMenu = UI_ACT;
+                }
+                else if (BItem.isPressed(mouseX,mouseY,mousePressed)) {
+                    UIMenu = UI_ITEM;
+                }
+                else if (BRun.isPressed(mouseX,mouseY,mousePressed)) {
+                    UIMenu = UI_RUN;
+                }
+            }
+            case UI_FIGHT: {
+                if (LBAttacks.isEmpty()) {
+                    for (int i = 0; i < player.attacks.size(); i++) {
+                        Attack a = player.attacks.get(i);
+                        LBAttacks.add(new Button(a.name, 0,0,0,0,0,0));
+                    }
+                }
+                int xp = 2, yp = 1;
+                BBack.draw(this);
+                if (BBack.isPressed(mouseX,mouseY,mousePressed)) {
+                    LBAttacks.clear();
+                    UIMenu = UI_MAIN;
+                    break;
+                }
+                for (int i = 0; i < player.attacks.size(); i++) {
+                    Attack a = player.attacks.get(i);
+                    Button button = LBAttacks.get(i);
+                    button.w = 190;
+                    button.h = 30;
+                    button.x = windowWidth-(200*xp);
+                    button.y = windowHeight-(50*yp);
+                    xp++;
+                    if (xp > 2) {
+                        xp = 1;
+                        yp++;
+                    }
+                    if (button.isPressed(mouseX,mouseY,mousePressed)) {
+                        UISelectedAttack = a;
+                        UIMenu = UI_FIGHT_WHO;
+                        break;
+                    }
+                }
+            }
+            case UI_FIGHT_WHO: {
+                if (LBEnemies.isEmpty()) {
+                    for (int i = 0; i < activeEnemies.size(); i++) {
+                        Attack a = player.attacks.get(i);
+                        LBEnemies.add(new Button(a.name, 0,0,0,0,0,0));
+                    }
+                }
+                int xp = 2, yp = 1;
+                BBack.draw(this);
+                if (BBack.isPressed(mouseX,mouseY,mousePressed)) {
+                    LBEnemies.clear();
+                    UIMenu = UI_FIGHT;
+                    break;
+                }
+                for (int i = 0; i < activeEnemies.size(); i++) {
+                    Enemy e = activeEnemies.get(i);
+                    Button button = LBEnemies.get(i);
+                    button.w = 190;
+                    button.h = 30;
+                    button.x = windowWidth-(200*xp);
+                    button.y = windowHeight-(50*yp);
+                    xp++;
+                    if (xp > 2) {
+                        xp = 1;
+                        yp++;
+                    }
+                    if (button.isPressed(mouseX,mouseY,mousePressed)) {
+                        // TODO: Add attacking enemies code here
+                    }
+                }
+            }
+
+            default:
+                UIMenu = UI_MAIN;
+        }
     }
+
     public void drawProgressBar(int current, int max, int foreground, int background, int x, int y, int w, int h, int padding) {
         fill(background);
         rect(x,y,w,h);

@@ -1,8 +1,9 @@
 import java.util.ArrayList;
 
 public class Enemy {
-    public int hitPoints, maxHitPoints, powerPoints, maxPowerPoints;
-    public ArrayList<Attack> attacks;
+    String name;
+    int hitPoints, maxHitPoints, powerPoints, maxPowerPoints;
+    ArrayList<Attack> attacks;
 
     public int act() {
         return 0;

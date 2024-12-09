@@ -1,7 +1,10 @@
+import java.util.ArrayList;
+
 public class Player {
-    public int hitPoints, powerPoints;
-    public int maxHitPoints, maxPowerPoints;
-    public int gold;
+    int hitPoints, powerPoints;
+    int maxHitPoints, maxPowerPoints;
+    int gold;
+    ArrayList<Attack> attacks = null;
 
     public Player(int hitPoints, int powerPoints, int maxHitPoints, int maxPowerPoints, int gold) {
         this.hitPoints = hitPoints;

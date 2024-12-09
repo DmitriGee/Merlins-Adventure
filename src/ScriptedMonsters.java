@@ -2,6 +2,7 @@ import java.util.ArrayList;
 
 public class ScriptedMonsters {
     public static class TrainingDummy extends Enemy {
+        String name = "Training Dummy";
         int maxHitPoints = 1000;
         int hitPoints = maxHitPoints;
         int maxPowerPoints = 0;
@@ -17,7 +18,7 @@ public class ScriptedMonsters {
 
         public Jeff() {
             this.attacks = new ArrayList<>();
-            Attack stare = new Attack("Stare","He's just standing there... MENACINGLY!",0,100,0,-1);
+            Attack stare = new Attack("Stare",null,1,100,25,2);
             this.attacks.add(stare);
         }
 

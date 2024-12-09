@@ -24,7 +24,7 @@ public class Attack {
         this.critChance = critChance;
     }
 
-    public Attack.Return roll(Player player, Enemy enemy) {
+    public Attack.Return roll() {
         int attackRoll = (int)(Math.random()*100.0);
         if (attackRoll > this.chance) {
             // Miss
