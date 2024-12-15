@@ -1,25 +1,21 @@
+import processing.core.PImage;
+
 import java.util.ArrayList;
 
 public class ScriptedMonsters {
     public static class TrainingDummy extends Enemy {
-        String name = "Training Dummy";
-        int maxHitPoints = 1000;
-        int hitPoints = maxHitPoints;
-        int maxPowerPoints = 0;
-        int powerPoints = maxPowerPoints;
-        public TrainingDummy() {}
+        public TrainingDummy() {
+            super("Training Dummy",1000,1000,0,0,new ArrayList<>(),null);
+        }
     }
-    public static class Jeff extends TrainingDummy {
-        int maxHitPoints = 25;
-        int hitPoints = maxHitPoints;
-        int maxPowerPoints = 0;
-        int powerPoints = maxPowerPoints;
-        ArrayList<Attack> attacks = null;
 
-        public Jeff() {
-            this.attacks = new ArrayList<>();
+    public static class Jeff extends Enemy {
+
+        public Jeff(PImage img) {
+            super("Jeff",25,25,0,0, new ArrayList<>(),img);
             Attack stare = new Attack("Stare",null,1,100,25,2);
             this.attacks.add(stare);
+            this.img = img;
         }
 
         @Override

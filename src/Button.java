@@ -1,7 +1,7 @@
 import processing.core.PApplet;
 
 public class Button {
-    String label;
+    String label = "Unset";
     int x, y, w, h;
     int foreground, background;
     public Button(String label, int x, int y, int w, int h, int foreground, int background) {

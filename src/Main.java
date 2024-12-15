@@ -1,12 +1,10 @@
 import processing.core.PApplet;
+
 import java.util.ArrayList;
 
 public class Main extends PApplet {
     int windowWidth = 1000;
     int windowHeight = 720;
-
-    int enemyWidth = 50;
-    int enemyHeight = 100;
 
     Player player = null;
     ArrayList<Enemy> activeEnemies = new ArrayList<>();
@@ -17,16 +15,23 @@ public class Main extends PApplet {
     final int UI_ITEM = 3;
     final int UI_RUN = 4;
     final int UI_FIGHT_WHO = 5;
+    final int UI_FIGHT_RESULT = 6;
 
     int UIMenu = UI_MAIN;
     Attack UISelectedAttack = null;
+    Enemy UISelectedEnemy = null;
+    Attack.Return AttackReturn = null;
+    int UIAttackReturnStage = 0;
+    Enemy remove = null;
     Button BFight = new Button("Fight", windowWidth-400, windowHeight-100, 190, 30, 0, 205);
     Button BAct = new Button("Act", windowWidth-200, windowHeight-100, 190, 30, 0, 205);
     Button BItem = new Button("Item", windowWidth-400, windowHeight-50, 190, 30, 0, 205);
     Button BRun = new Button("Run", windowWidth-200, windowHeight-50, 190, 30, 0, 205);
     Button BBack = new Button("Back", windowWidth-400, windowHeight-100, 190, 30, 0, 205);
-    ArrayList<Button> LBAttacks = new ArrayList<>();
-    ArrayList<Button> LBEnemies = new ArrayList<>();
+    Button CBAttack = new Button("/!\\",0,0,0,0,0,205);
+    Button CBWho = new Button("/!\\",0,0,0,0,0,205);
+    boolean mouseDown = false;
+    boolean canClick = true;
 
 
     public void settings() {
@@ -34,32 +39,55 @@ public class Main extends PApplet {
     }
     public void setup() {
         frameRate(60);
-        player = new Player(17,6,40,10,0);
-        player.attacks.add(new Attack("Cast Lightning", "Cast a bolt of lightning.", 2, 95, 5, 15));
-        player.attacks.add(new Attack("Cast Fireball", "Cast a flaming fireball.", 5, 15, 10, 1));
+        player = new Player(40,10,40,10,0);
+        player.img = loadImage("img/Merlin.png");
+        player.attacks.add(new Attack("[DEV]Miss", "[DevTools] Guaranteed miss", 4, -1, 4, -1));
+        player.attacks.add(new Attack("[DEV]Hit", "[DevTools] Guaranteed hit", 4, 100, 4, -1));
+        player.attacks.add(new Attack("[DEV]Critical", "[DevTools] Guaranteed critical hit", 4, 100, 8, 100));
 
-        Enemy jeff = new ScriptedMonsters.Jeff();
+        Enemy jeff = new ScriptedMonsters.Jeff(loadImage("img/Dummy.png"));
+        Enemy jeff2 = new ScriptedMonsters.Jeff(loadImage("img/Dummy.png"));
+        Enemy jeff3 = new ScriptedMonsters.Jeff(loadImage("img/Dummy.png"));
         activeEnemies.add(jeff);
+        activeEnemies.add(jeff2);
+        activeEnemies.add(jeff3);
     }
     public void draw() {
         background(255);
         noStroke();
         drawField();
         drawUI();
+        textSize(30);
+        textAlign(CENTER, CENTER);
+        fill(0);
+        if (activeEnemies.isEmpty()) {
+            text("YOU WON THE DEMO!", (int) (windowWidth / 2), (int) (windowHeight / 2));
+        }
+        textSize(26);
+        textAlign(LEFT,TOP);
+        text("PROOF OF CONCEPT - Features Missing and/or Bugs Not Squashed!", 0,0);
     }
     public void drawField() {
         fill(color(0,255,0));
         rect(200,250,50,100); // Player Placeholder
+        copy(player.img, 0,0,50,100,200,250,50,100);
 
         fill(color(255,0,0));
         for (int i = 0; i < activeEnemies.size(); i++) {
-            if (activeEnemies.get(i) != null) {
+            Enemy e = activeEnemies.get(i);
+            if (e != null) {
                 if (i == 0) { // Middle Position
                     rect(windowWidth-250,250,50,100);
+                    copy(e.img, 0,0,50,100,windowWidth-250,250,50,100);
+                    drawProgressBar(e.hitPoints,e.maxHitPoints,color(255,0,0),0,windowWidth-250,250,60,10,2);
                 } else if (i == 1) { // Top Position
                     rect(windowWidth-250-35,250-115,50-10,100-20);
+                    copy(e.img, 0,0,50,100,windowWidth-250-35,250-115,50-10,100-20);
+                    drawProgressBar(e.hitPoints,e.maxHitPoints,color(255,0,0),0,windowWidth-250-35,250-115,60,10,2);
                 } else if (i == 2) { // Bottom Position
                     rect(windowWidth-250+45,250+125,50+10,100+20);
+                    copy(e.img, 0,0,50,100,windowWidth-250+45,250+125,50+10,100+20);
+                    drawProgressBar(e.hitPoints,e.maxHitPoints,color(255,0,0),0,windowWidth-250+45,250+125,60,10,2);
                 }
             }
         }
@@ -96,6 +124,8 @@ public class Main extends PApplet {
         textSize(12);
         text(player.powerPoints+"/"+player.maxPowerPoints, 200+20+40,windowHeight-120+40);
 
+        canClick = !mouseDown;
+        mouseDown = mousePressed;
         switch (UIMenu) {
             case UI_MAIN: {
                 BFight.background = 205;
@@ -119,86 +149,167 @@ public class Main extends PApplet {
                 BAct.draw(this);
                 BItem.draw(this);
                 BRun.draw(this);
-                if (BFight.isPressed(mouseX,mouseY,mousePressed)) {
-                    UIMenu = UI_FIGHT;
-                }
-                else if (BAct.isPressed(mouseX,mouseY,mousePressed)) {
-                    UIMenu = UI_ACT;
-                }
-                else if (BItem.isPressed(mouseX,mouseY,mousePressed)) {
-                    UIMenu = UI_ITEM;
-                }
-                else if (BRun.isPressed(mouseX,mouseY,mousePressed)) {
-                    UIMenu = UI_RUN;
+
+                if (canClick) {
+                    if (BFight.isPressed(mouseX,mouseY,mousePressed)) {
+                        UIMenu = UI_FIGHT;
+                    }
+                    else if (BAct.isPressed(mouseX,mouseY,mousePressed)) {
+                        UIMenu = UI_ACT;
+                    }
+                    else if (BItem.isPressed(mouseX,mouseY,mousePressed)) {
+                        UIMenu = UI_ITEM;
+                    }
+                    else if (BRun.isPressed(mouseX,mouseY,mousePressed)) {
+                        UIMenu = UI_RUN;
+                    }
                 }
             }
+                break;
             case UI_FIGHT: {
-                if (LBAttacks.isEmpty()) {
-                    for (int i = 0; i < player.attacks.size(); i++) {
-                        Attack a = player.attacks.get(i);
-                        LBAttacks.add(new Button(a.name, 0,0,0,0,0,0));
-                    }
-                }
                 int xp = 2, yp = 1;
+                textSize(16);
                 BBack.draw(this);
-                if (BBack.isPressed(mouseX,mouseY,mousePressed)) {
-                    LBAttacks.clear();
-                    UIMenu = UI_MAIN;
-                    break;
+                if (BBack.isHover(mouseX,mouseY)) {
+                    BBack.background = 255;
+                } else {
+                    BBack.background = 205;
                 }
-                for (int i = 0; i < player.attacks.size(); i++) {
-                    Attack a = player.attacks.get(i);
-                    Button button = LBAttacks.get(i);
-                    button.w = 190;
-                    button.h = 30;
-                    button.x = windowWidth-(200*xp);
-                    button.y = windowHeight-(50*yp);
-                    xp++;
-                    if (xp > 2) {
-                        xp = 1;
-                        yp++;
-                    }
-                    if (button.isPressed(mouseX,mouseY,mousePressed)) {
-                        UISelectedAttack = a;
-                        UIMenu = UI_FIGHT_WHO;
+                if (canClick) {
+                    if (BBack.isPressed(mouseX, mouseY, mousePressed)) {
+                        UIMenu = UI_MAIN;
                         break;
                     }
                 }
-            }
-            case UI_FIGHT_WHO: {
-                if (LBEnemies.isEmpty()) {
-                    for (int i = 0; i < activeEnemies.size(); i++) {
-                        Attack a = player.attacks.get(i);
-                        LBEnemies.add(new Button(a.name, 0,0,0,0,0,0));
-                    }
-                }
-                int xp = 2, yp = 1;
-                BBack.draw(this);
-                if (BBack.isPressed(mouseX,mouseY,mousePressed)) {
-                    LBEnemies.clear();
-                    UIMenu = UI_FIGHT;
-                    break;
-                }
-                for (int i = 0; i < activeEnemies.size(); i++) {
-                    Enemy e = activeEnemies.get(i);
-                    Button button = LBEnemies.get(i);
-                    button.w = 190;
-                    button.h = 30;
-                    button.x = windowWidth-(200*xp);
-                    button.y = windowHeight-(50*yp);
+                for (Attack a: player.attacks) {
+                    CBAttack.label = a.name;
+                    CBAttack.w = 190;
+                    CBAttack.h = 30;
+                    CBAttack.x = windowWidth-600+(200*xp);
+                    CBAttack.y = windowHeight-150+(50*yp);
                     xp++;
                     if (xp > 2) {
                         xp = 1;
                         yp++;
                     }
-                    if (button.isPressed(mouseX,mouseY,mousePressed)) {
-                        // TODO: Add attacking enemies code here
+                    if (CBAttack.isHover(mouseX, mouseY)) {
+                        CBAttack.background = 255;
+                        if (a.description != null) {
+                            textAlign(CENTER, CENTER);
+                            textSize(10);
+                            fill(0);
+                            text(a.description, windowWidth-210, windowHeight-60);
+                        }
+                    } else {
+                        CBAttack.background = 205;
+                    }
+                    textSize(16);
+                    CBAttack.draw(this);
+                    if (canClick) {
+                        if (CBAttack.isPressed(mouseX,mouseY,mousePressed)) {
+                            UISelectedAttack = a;
+                            UIMenu = UI_FIGHT_WHO;
+                            break;
+                        }
                     }
                 }
             }
-
+                break;
+            case UI_FIGHT_WHO: {
+                int xp = 2, yp = 1;
+                textSize(16);
+                if (BBack.isHover(mouseX, mouseY)) {
+                    BBack.background = 255;
+                } else {
+                    BBack.background = 205;
+                }
+                BBack.draw(this);
+                if (BBack.isPressed(mouseX,mouseY,mousePressed)) {
+                    UIMenu = UI_FIGHT;
+                    break;
+                }
+                for (Enemy e : activeEnemies) {
+                    CBWho.label = e.name;
+                    CBWho.w = 190;
+                    CBWho.h = 30;
+                    CBWho.x = windowWidth-600+(200*xp);
+                    CBWho.y = windowHeight-150+(50*yp);
+                    xp++;
+                    if (xp > 2) {
+                        xp = 1;
+                        yp++;
+                    }
+                    if (CBWho.isHover(mouseX, mouseY)) {
+                        CBWho.background = 255;
+                    } else {
+                        CBWho.background = 205;
+                    }
+                    textSize(16);
+                    CBWho.draw(this);
+                    if (canClick) {
+                        if (CBWho.isPressed(mouseX,mouseY,mousePressed)) {
+                            UISelectedEnemy = e;
+                            UIMenu = UI_FIGHT_RESULT;
+                            AttackReturn = UISelectedAttack.roll();
+                            UISelectedEnemy.hitPoints -= AttackReturn.damage;
+                            if (UISelectedEnemy.hitPoints <= 0) {
+                                remove = e;
+                            }
+                            UIAttackReturnStage = 0;
+                        }
+                    }
+                }
+                if (remove != null) {
+                    activeEnemies.remove(remove);
+                    remove = null;
+                }
+            }
+                break;
+            case UI_FIGHT_RESULT: {
+                textAlign(LEFT, CENTER);
+                switch (UIAttackReturnStage) {
+                    case 0: {
+                        if (AttackReturn.crit) {
+                            textSize(24);
+                            fill(color(205, 0, 0));
+                            float _w = textWidth("CRITICAL!");
+                            text("CRITICAL!", 10, windowHeight - 20);
+                            textSize(14);
+                            fill(0);
+                            text("Dealt " + AttackReturn.damage + "HP of damage.", 10 + _w + 5, windowHeight - 20);
+                        } else if (AttackReturn.hit) {
+                            textSize(14);
+                            fill(0);
+                            text("Hit! Dealt " + AttackReturn.damage + "HP of damage.", 10, windowHeight - 20);
+                        } else {
+                            textSize(14);
+                            fill(0);
+                            text("Miss!", 10, windowHeight - 20);
+                        }
+                    }
+                        break;
+                    case 1: {
+                        if (UISelectedEnemy.hitPoints <= 0) {
+                            textSize(14);
+                            fill(0);
+                            text(UISelectedEnemy.name+" defeated!", 10, windowHeight - 20);
+                        } else {
+                            UIAttackReturnStage++;
+                        }
+                    }
+                        break;
+                }
+                if (mouseDown && canClick) {
+                    UIAttackReturnStage++;
+                }
+                if (UIAttackReturnStage >= 2) {
+                    UIMenu = UI_MAIN;
+                }
+            }
+                break;
             default:
                 UIMenu = UI_MAIN;
+                break;
         }
     }
 
